@@ -1,0 +1,22 @@
+version: '3.5'
+
+services:
+
+  rabbit:
+    image: rabbitmq:3.7-management
+    hostname: rabbit
+    networks:
+      - rnet
+    ports:
+      - 5672:5672
+      - 15672:15672
+    environment:
+      - RABBITMQ_ERLANG_COOKIE=rabbit
+    volumes:
+      - ./data/rabbit/conf/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./data/rabbit/conf/enabled_plugins:/etc/rabbitmq/enabled_plugins
+
+networks:
+  rnet:
+    driver: bridge
+    name: rnet
