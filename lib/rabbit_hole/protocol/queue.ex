@@ -14,6 +14,8 @@ defmodule RabbitHole.Protocol.Queue do
 
   def delete(channel, queue), do: Q.delete(channel, queue)
 
+  defdelegate message_count(channel, queue), to: Q
+
   ### HELPERS
 
   defp check_opts(opts) do
