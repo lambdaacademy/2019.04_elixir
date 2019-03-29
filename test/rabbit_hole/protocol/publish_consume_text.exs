@@ -21,15 +21,24 @@ defmodule RabbitHole.Protocol.PublishConsumeTest do
   end
 
   test "publishes to a queue", params do
+    # WHEN
     :ok = Basic.publish(params.chan, "", params.queue, @my_message)
+
+    # THEN
     assert {:ok, %{message_count: 1}} =
       Queue.delete(params.chan, params.queue)
   end
 
   test "publishes to and consumes from a queue", params do
+    # GIVEN
+    {:ok, tag} = Basic.consume(params.chan, params.queue)
+
+    # WHEN
     :ok = Basic.publish(params.chan, "", params.queue, @my_message)
-    {:ok, _} = Basic.consume(params.chan, params.queue)
-    assert_receive {:basic_deliver, @my_message, _meta}
+    {:ok, ^tag} = Basic.cancel(params.chan, tag)
+
+    # THEN
+    assert_received {:basic_deliver, @my_message, _meta}
     assert {:ok, %{message_count: 0}} =
       Queue.delete(params.chan, params.queue)
   end
