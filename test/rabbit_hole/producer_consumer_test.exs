@@ -4,10 +4,13 @@ defmodule RabbitHole.ProducerConsumerTest do
   alias RabbitHole.Protocol.{Connection, Channel, Queue}
   alias RabbitHole.{Producer, Consumer}
 
+  require Logger
+
   @task_queue "task_queue"
   @short_task "This is short task."
   @long_task "This is long task..."
-  @task_delay_ms 1000
+  @task_delay_ms 10
+  @enqueue_message_delay 200
 
   # TESTS
 
@@ -16,8 +19,14 @@ defmodule RabbitHole.ProducerConsumerTest do
     {:ok, chan} = Channel.open(conn)
 
     on_exit(fn ->
-      :ok = Channel.close(chan)
-      :ok = Connection.close(conn)
+      try do
+        :ok = Channel.close(chan)
+        :ok = Connection.close(conn)
+      catch
+        :exit, _ ->
+          :ok
+          Logger.warn("The connection and channel has already been closed")
+      end
     end)
 
     [conn: conn, chan: chan]
@@ -33,7 +42,8 @@ defmodule RabbitHole.ProducerConsumerTest do
       :ok = Producer.publish(ref, @long_task)
 
       # THEN
-      assert Queue.message_count(params.chan, @task_queue)
+      Process.sleep(@enqueue_message_delay)
+      assert 2 = Queue.message_count(params.chan, @task_queue)
 
       # CLEANUP
       :ok = Producer.stop(ref)
@@ -60,7 +70,7 @@ defmodule RabbitHole.ProducerConsumerTest do
       # GIVEN
       me = self()
       ref = make_ref()
-      wu = work_units(@short_task)
+      wu = work_units(@long_task)
 
       {:ok, c_ref} =
         Consumer.start(@task_queue,
@@ -70,14 +80,14 @@ defmodule RabbitHole.ProducerConsumerTest do
       {:ok, p_ref} = Producer.start(@task_queue)
 
       # WHEN
-      :ok = Producer.publish(p_ref, @short_task)
+      :ok = Producer.publish(p_ref, @long_task)
 
       # THEN
-      assert_receive {:processed, ^ref, ^wu}
+      assert_receive {:processed, ^ref, ^wu}, @enqueue_message_delay
 
       # CLEANUP
-      Producer.stop(p_ref)
       Consumer.stop(c_ref)
+      Producer.stop(p_ref)
     end
 
     test "publishes a task and competing consumers consume" do
@@ -85,41 +95,42 @@ defmodule RabbitHole.ProducerConsumerTest do
       me = self()
       ref1 = make_ref()
       ref2 = make_ref()
-      processor = fn task -> send(me, {:processed, ref1, process(task)}) end
+      processor1 = fn task -> send(me, {:processed, ref1, process(task)}) end
+      processor2 = fn task -> send(me, {:processed, ref2, process(task)}) end
+      {:ok, p_ref} = Producer.start(@task_queue)
 
-      {:ok, c_ref1} = Consumer.start(@task_queue, processor: processor)
-      {:ok, c_ref2} = Consumer.start(@task_queue, processor: processor)
+      {:ok, c_ref1} = Consumer.start(@task_queue, processor: processor1)
+      {:ok, c_ref2} = Consumer.start(@task_queue, processor: processor2)
       wu1 = work_units(@short_task)
       wu2 = work_units(@long_task)
-
-      {:ok, p_ref} = Producer.start(@task_queue)
 
       # WHEN
       for t <- [@short_task, @long_task], do: :ok = Producer.publish(p_ref, t)
 
       # THEN
       # @short_task processed by the first consumer
-      assert_receive {:processed, ^ref1, ^wu1}
+      assert_receive {:processed, ^ref1, ^wu1}, @enqueue_message_delay
       # @long_taks processed by the second consumer
-      assert_receive {:processed, ^ref2, ^wu2}
+      assert_receive {:processed, ^ref2, ^wu2}, @enqueue_message_delay
 
       # CLEANUP
-      Producer.stop(p_ref)
       for c <- [c_ref1, c_ref2], do: Consumer.stop(c)
+      Producer.stop(p_ref)
     end
   end
 
   # HELPERS
 
   defp process(task) do
+    Logger.info("Processing: #{inspect task}")
     Enum.reduce(
+      1..work_units(task),
+      0,
       fn _, acc ->
-        IO.puts("Processing")
+        Logger.info("[x]")
         Process.sleep(@task_delay_ms)
         acc + 1
-      end,
-      0,
-      1..work_units(task)
+      end
     )
   end
 
