@@ -5,7 +5,7 @@ defmodule RabbitHole.Protocol.ConnectionTest do
 
   test "connects and creates a channel" do
     {:ok, conn} = Connection.open()
-    {:ok, chann} = Channel.open(conn)
+    {:ok, _chan} = Channel.open(conn)
   end
 
   test "connects, creates a channel and disconnects" do
