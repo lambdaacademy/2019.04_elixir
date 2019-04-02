@@ -3,6 +3,15 @@
 This is a workshop through out which one develops a simple RabbitMQ applicaiton 
 in Elixir.
 
+- [School of RabbitMQ in Elixir](#school-of-rabbitmq-in-elixir)
+  - [Repo structure](#repo-structure)
+  - [The workshop](#the-workshop)
+    - [Step 0: Connections and Channels](#step-0-connections-and-channels)
+    - [Step 1: Simple producer and consumer](#step-1-simple-producer-and-consumer)
+      - [Managing queues](#managing-queues)
+      - [Publising and consuming](#publising-and-consuming)
+      - [Simple producer and consumer implementation](#simple-producer-and-consumer-implementation)
+
 ## Repo structure
 
 * master holds the end solution
@@ -47,4 +56,4 @@ They are used for AMQP and RabbitMQ server Managment UI respectively
 1. Checkout at [step-1-start](https://github.com/lambdaacademy/2019.04_elixir/tree/step-1-start) tag: `git checkout step-1-start`.
 2. Open [`test/rabbit_hole/producer_consumer_test.exs`](test/rabbit_hole/producer_consumer_test.exs) and see the expected behaviour of the [`RabbitHole.Producer`](lib/rabbit_hole/producer.ex) and the [`RabbitHole.Consumer`](lib/rabbit_hole/consumer.ex).
 3. Implement the producer and consumer modules.
-4. Check the solution by looking at the diff between the tag and the  head of the [1-simple-producer-consumer branch](https://github.com/lambdaacademy/2019.04_elixir/tree/1-simple-producer-consumer): [step-1-start...step/1-simple-producer-consumer](https://github.com/lambdaacademy/2019.04_elixir/compare/step-1-start...step/1-simple-producer-consumer).
+4. Check the solution by looking at the diff between the tag and the  head of the [1-simple-producer-consumer branch](https://github.com/lambdaacademy/2019.04_elixir/tree/step/1-simple-producer-consumer): [step-1-start...step/1-simple-producer-consumer](https://github.com/lambdaacademy/2019.04_elixir/compare/step-1-start...step/1-simple-producer-consumer).
