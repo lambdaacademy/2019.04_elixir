@@ -6,4 +6,4 @@ config :lager,
   ]
 
 config :logger,
-  level: :error
+  level: :warn
