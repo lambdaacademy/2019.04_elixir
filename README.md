@@ -50,6 +50,11 @@ They are used for AMQP and RabbitMQ server Managment UI respectively
 
 1. Open [`test/rabbit_hole/protocol/publish_consume_test.exs`](test/rabbit_hole/protocol/publish_consume_test.exs) to see how a message can be published to and consumed from a queue
 2. Run the tests `mix test test/rabbit_hole/protocol/publish_consume_test.exs`
+3. Comment out the queue deletion operation in the first test in `test/rabbit_hole/protocol/publish_consume_test.exs`, run it:
+
+   `mix test test/rabbit_hole/protocol/publish_consume_test.exs:23`
+   
+and see the message enqueued in the `my_queue` through the the management UI: `http://localhost:15672/#/queues` (user/pass: guest/guest).
 
 #### Simple producer and consumer implementation
 
