@@ -21,8 +21,8 @@ defmodule RabbitHole.Protocol.QueueDeclareTest do
 
     test "declares a queue with auto-generated name", params do
       assert {:ok, queue} = Queue.declare(params.chan)
-      # redeclaration of the same queue checks its name and all its params
-      assert {:ok, queue} = Queue.declare(params.chan)
+      assert {:ok, another_queue} = Queue.declare(params.chan)
+      refute queue == another_queue
       {:ok, %{message_count: 0}} = Queue.delete(params.chan, queue)
     end
 
