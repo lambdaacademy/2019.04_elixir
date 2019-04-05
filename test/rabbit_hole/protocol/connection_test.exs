@@ -39,15 +39,9 @@ defmodule RabbitHole.Protocol.ConnectionTest do
     end
 
     test "a channel is gone along with the connection", params do
-      {:ok, chann} = Channel.open(params.conn)
+      {:ok, chan} = Channel.open(params.conn)
       :ok = Connection.close(params.conn)
-
-      try do
-        :ok = Channel.close(chann)
-      catch
-        :exit, {:noproc, _} ->
-          :ok
-      end
+      assert {:noproc, _} = catch_exit(Channel.close(chan))
     end
   end
 end
