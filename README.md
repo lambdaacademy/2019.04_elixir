@@ -70,7 +70,7 @@ and see the message enqueued in the `my_queue` through the the management UI: `h
 
 #### Managing exchanges
 
-1. Open [`test/rabbit_hole/protocol/exchange.ex`](test/rabbit_hole/protocol/exchange.ex) to see how to declare an exchange.
+1. Open [`test/rabbit_hole/protocol/exchange_declare_test.exs`](test/rabbit_hole/protocol/exchange_declare_test.exs) to see how to declare an exchange.
 2. Run the tests: `mix test --trace test/rabbit_hole/protocol/exchange_declare_test.exs`.
 
 #### Publishing to and consuming from different topics
