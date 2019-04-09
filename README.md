@@ -11,6 +11,8 @@ in Elixir.
       - [Managing queues](#managing-queues)
       - [Publising and consuming](#publising-and-consuming)
       - [Simple producer and consumer implementation](#simple-producer-and-consumer-implementation)
+    - [Step 2: Message routing](#step-2-message-routing)
+      - [Managing exchanges](#managing-exchanges)
 
 ## Repo structure
 
@@ -62,3 +64,10 @@ and see the message enqueued in the `my_queue` through the the management UI: `h
 2. Open [`test/rabbit_hole/producer_consumer_test.exs`](test/rabbit_hole/producer_consumer_test.exs) and see the expected behaviour of the [`RabbitHole.Producer`](lib/rabbit_hole/producer.ex) and the [`RabbitHole.Consumer`](lib/rabbit_hole/consumer.ex).
 3. Implement the producer and consumer modules.
 4. Check the solution by looking at the diff between the tag and the  head of the [1-simple-producer-consumer branch](https://github.com/lambdaacademy/2019.04_elixir/tree/step/1-simple-producer-consumer): [step-1-start...step/1-simple-producer-consumer](https://github.com/lambdaacademy/2019.04_elixir/compare/step-1-start...step/1-simple-producer-consumer).
+
+### Step 2: Message routing
+
+#### Managing exchanges
+
+1. Open [`test/rabbit_hole/protocol/exchange.ex`](test/rabbit_hole/protocol/exchange.ex) to see how to declare an exchange.
+2. Run the tests: `mix test --trace test/rabbit_hole/protocol/exchange_declare_test.exs`.
