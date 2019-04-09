@@ -16,6 +16,8 @@ defmodule RabbitHole.Protocol.Queue do
 
   defdelegate message_count(channel, queue), to: Q
 
+  defdelegate bind(channel, queue, exchange, options), to: Q
+
   ### HELPERS
 
   defp check_opts(opts) do
