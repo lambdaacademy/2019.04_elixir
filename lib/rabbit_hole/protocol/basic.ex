@@ -5,12 +5,12 @@ defmodule RabbitHole.Protocol.Basic do
 
   @type publish_opt() :: :mandatory | atom()
 
-  @allowed_opts [:mandatory]
+  @allowed_publish_opts [:mandatory]
 
   alias AMQP.Basic, as: B
 
   def publish(channel, exchange, routing_key, payload, opts \\ []) do
-    B.publish(channel, exchange, routing_key, payload, check_opts(opts))
+    B.publish(channel, exchange, routing_key, payload, check_opts(opts, @allowed_publish_opts))
   end
 
   def consume(channel, queue, options \\ []) do
@@ -31,13 +31,19 @@ defmodule RabbitHole.Protocol.Basic do
     end
   end
 
+  def ack(channel, delivery_tag, opts \\ []) do
+    B.ack(channel, delivery_tag, check_opts(opts, [:multiple]))
+  end
+
+  defdelegate qos(channel, options), to: B
+
   ### HELPERS
 
-  defp check_opts([]), do: []
-  defp check_opts(opts) do
-    Enum.map(opts, fn
-      o when o in @allowed_opts -> {o, true}
-      o -> raise "Unreconginsed option: #{o}"
+  defp check_opts([], _), do: []
+
+  defp check_opts(opts, allowed) do
+    Enum.map(opts, fn o ->
+      (o in allowed && {o, true}) || raise "Unreconginsed option: #{o}"
     end)
   end
 end
