@@ -32,7 +32,7 @@ defmodule RabbitHole.SimpleTask.Consumer do
     {:ok, conn} = Connection.open()
     {:ok, chan} = Channel.open(conn)
     {:ok, _} = Queue.declare(chan, opts[:queue])
-    {:ok, tag} = Basic.consume(chan, opts[:queue])
+    {:ok, tag} = Basic.consume(chan, opts[:queue], no_ack: true)
 
     {:ok,
      %State{

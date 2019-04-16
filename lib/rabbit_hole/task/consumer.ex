@@ -41,7 +41,7 @@ defmodule RabbitHole.Task.Consumer do
     {:ok, chan} = Channel.open(conn)
     {:ok, queue} = Queue.declare(chan, "", [:auto_delete])
     :ok = Queue.bind(chan, queue, opts[:exchange], routing_key: opts[:binding_key])
-    {:ok, tag} = Basic.consume(chan, queue)
+    {:ok, tag} = Basic.consume(chan, queue, no_ack: true)
 
     {:ok,
      %State{

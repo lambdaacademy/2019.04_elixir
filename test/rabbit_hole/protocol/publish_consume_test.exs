@@ -31,7 +31,7 @@ defmodule RabbitHole.Protocol.PublishConsumeTest do
 
   test "publishes to and consumes from a queue", params do
     # GIVEN
-    {:ok, tag} = Basic.consume(params.chan, params.queue)
+    {:ok, tag} = Basic.consume(params.chan, params.queue, no_ack: true)
 
     # WHEN
     :ok = Basic.publish(params.chan, "", params.queue, @my_message)
