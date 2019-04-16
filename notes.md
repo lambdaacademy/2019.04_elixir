@@ -62,7 +62,31 @@ Show a minimum example for producing and consuming.
 * create a simple publisher script (.exs)
 * attach 2 consumers and see they got messages in a round robin fashion
 
-### 2: acknowledge consumed messages and setup prefetch
+### 2: route messages depending on the routing key
+
+Explain binding queues to exchanges with routing keys and how that influences message distribution.
+
+#### concepts
+
+* routing key and binding key
+* different matching algorithm between binding and routing key depending on the exchange type
+* dropped message if there's no one to route to
+
+#### dev
+
+* implement a task producer process
+  * declares an exchange `task`
+  * provides an interface for running a task (Producer.run(Task))
+  * a task can be `{other, Task}`, `{fun, {Fun, Args}}` or `{mfa, {M,F,A}}`
+    * validates the task and publishes with `task.simple`, `task.fun` or `task.mfa` respectivelty
+* implement `task_processor` process
+  * configurable backend for different tasks types
+  * can be started with different binding keys
+    *  `task.{fun|mfa|*}` for funs, mfas and all other respectively
+       *   e.g. `task_processor.start_link("task.fun", fun = _MsgTag, TaskProcessor.Fun)`
+* run the system with one producer and 3 consumers
+
+### 3: acknowledge consumed messages and setup prefetch
 
 Illustrate basic mechanism for acknolwedging consumption and using prefetch for
 consumption performance tuning.
@@ -84,25 +108,39 @@ consumption performance tuning.
     is congested with them
   - to high (5): one conumer gets overloaded while the other one has nothing to do
 
-### 3: route messages depending on the routing key
+## TODO
 
-Explain binding queues to exchanges with routing keys and how that influences message distribution.
+* add ToMessage protocol for to/from string conversion for tasks
+* handle the mandatory/immediate options and register the handler
+* figure out tests templating
 
-#### concepts
+   ```elixir
+   describe "x" do
+    # publish_task_test("other", @other_task)
+    for {type, task} <- [{"other", @other_task}, {"fun", @fun_task}, {"MFA", @mfa_task}] do
+      # test "ala #{type}" do
+      # assert 3 = 1 + 2
+      # https://stackoverflow.com/questions/37135619/elixir-how-can-i-unquote-an-array-of-functions-in-my-macro
+      test "publish a #{type} task", prams do
+        # GIVEN
+        {:ok, ref} = Producer.start(@task_queue)
 
-* routing key and binding key
-* different matching algorithm between binding and routing key depending on the exchange type
+        # WHEN
 
-#### dev
+    defp publish_task_test(task, chan) do
+      # GIVEN
+      {:ok, ref} = Producer.start(@task_exchange)
 
-* implement a task producer process
-  * declares an exchange `task`
-  * provides an interface for running a task
-  * a task can be `{other, Task}`, `{fun, {Fun, Args}}` or `{mfa, {M,F,A}}`
-    * validates the task and publishes with `task.other`, `task.fun` or `task.mfa` respectivelty
-* implement `task_processor` process
-  * configurable backend for different tasks types
-  * can be started with different binding keys
-    *  `task.{fun|mfa|*}` for funs, mfas and all other respectively
-       *   e.g. `task_processor.start_link("task.fun", fun = _MsgTag, TaskProcessor.Fun)`
-* run the system with one producer and 3 consumers
+      # WHEN
+      Logger.debug "Publishing: #{inspect task}"
+      :ok = Producer.publish(ref, task)
+
+      # THEN
+      Process.sleep(@enqueue_message_delay)
+      assert 1 = Queue.message_count(chan, @task_queue)
+
+      # CLEANUP
+      :ok = Producer.stop(ref)
+    end
+  end
+  ```
