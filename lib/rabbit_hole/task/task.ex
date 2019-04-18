@@ -4,14 +4,19 @@ defmodule RabbitHole.Task do
 
   defmodule Fun do
     defstruct fun: nil, args: []
+    @spec run(RabbitHole.Task.Fun.t()) :: any()
+    def run(%Fun{} = t), do: t.fun.(t.args)
   end
 
   defmodule MFA do
     defstruct mod: nil, fun: nil, args: []
+    @spec run(RabbitHole.Task.MFA.t()) :: any()
+    def run(%MFA{} = t), do: apply(t.mod, t.fun, t.args)
   end
 
   defmodule Other do
     defstruct val: nil
+    def run(%Other{} = t), do: t.val
   end
 
   def topic_prefix(), do: "task."
