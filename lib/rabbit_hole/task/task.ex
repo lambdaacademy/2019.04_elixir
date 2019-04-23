@@ -19,6 +19,8 @@ defmodule RabbitHole.Task do
     def run(%Other{} = t), do: t.val
   end
 
+  def assert_valid!(task), do: valid_task?(task) || raise "Invalid task"
+
   def topic_prefix(), do: "task."
 
   def topic(task_kind) when is_atom(task_kind) do

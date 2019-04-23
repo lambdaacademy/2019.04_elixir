@@ -19,7 +19,7 @@ defmodule RabbitHole.MixProject do
 
   defp deps do
     [
-      {:amqp, "~> 1.1"}
+      {:amqp, "~> 1.2"}
     ]
   end
 end

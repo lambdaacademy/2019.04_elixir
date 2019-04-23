@@ -19,19 +19,24 @@ defmodule RabbitHole.Task.Consumer do
 
   @type consumer_ref :: any()
   @type processor :: (Task.t(), consumer_ref -> :ok | :error)
-  @type opts() :: [processor: processor()]
+  @type opts() :: [processor: processor(), prefetch: non_neg_integer()]
 
   # API
 
   @spec start(Exchange.t(), Task.kind(), opts()) :: {:ok, consumer_ref()}
   def start(task_exchange, task_kind, opts \\ []) do
     binding_key = Task.topic(task_kind)
-    GenServer.start(__MODULE__, [{:exchange, task_exchange}, {:binding_key, binding_key} | opts])
+    verify_opts!(opts)
+
+    GenServer.start(
+      __MODULE__,
+      [{:exchange, task_exchange}, {:binding_key, binding_key} | opts]
+    )
   end
 
   @spec stop(consumer_ref()) :: :ok
-  def stop(ref) do
-    GenServer.stop(ref)
+  def stop(ref, reason \\ :normal, timeout \\ :infinity) do
+    GenServer.stop(ref, reason, timeout)
   end
 
   # CALLBACKS
@@ -69,4 +74,11 @@ defmodule RabbitHole.Task.Consumer do
   # HELPERS
 
   defp default_processor(msg), do: IO.puts("Got message: #{inspect(msg)}")
+
+  defp verify_opts!(opts) do
+    if opts[:prefetch] do
+      (is_integer(opts[:prefetch]) && opts[:prefetch] > 0) ||
+        raise "Bad value for :prefetch: #{inspect(opts[:prefetch])}"
+    end
+  end
 end
