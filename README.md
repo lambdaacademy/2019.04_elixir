@@ -98,7 +98,7 @@ and see the message enqueued in the `my_queue` through the the management UI: `h
 
 #### Publishng and consuming tasks with Confirms and Acks
 
-1. Checkout at [step-2-start](https://github.com/lambdaacademy/2019.04_elixir/tree/step-3-start) tag: `git checkout step-3-start`.
+1. Checkout at [step-3-start](https://github.com/lambdaacademy/2019.04_elixir/tree/step-3-start) tag: `git checkout step-3-start`.
 2. Open [`test/rabbit_hole/task/producer_consumer_with_data_integrity_test.exs`](test/rabbit_hole/task/producer_consumer_with_data_integrity_test.exs) and see the expected behaviour of the [`RabbitHole.Task.Producer`](lib/rabbit_hole/task/producer.ex) and the [`RabbitHole.Task.Consumer`](lib/rabbit_hole/task/consumer.ex) with added Publisher Confirms and Consumer Acks respectively.
 3. Extend the producer and consumer modules.
 4. Check the solution by looking at the diff between the tag and the  head of the [3-data-integrity](https://github.com/lambdaacademy/2019.04_elixir/tree/step/3-data-integrity): [step-3-start...step/3-data-integrity](https://github.com/lambdaacademy/2019.04_elixir/compare/step-3-start...step/3-data-integrity).
