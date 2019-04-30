@@ -10,6 +10,7 @@ defmodule RabbitHole.Task.Consumer do
 
   defstruct conn: nil,
             chan: nil,
+            manual_ack: false,
             binding_key: nil,
             consumer_tag: nil,
             consumer_ref: nil,
@@ -46,12 +47,20 @@ defmodule RabbitHole.Task.Consumer do
     {:ok, chan} = Channel.open(conn)
     {:ok, queue} = Queue.declare(chan, "", [:auto_delete])
     :ok = Queue.bind(chan, queue, opts[:exchange], routing_key: opts[:binding_key])
-    {:ok, tag} = Basic.consume(chan, queue, no_ack: true)
+
+    {:ok, tag} =
+      if opts[:prefetch] do
+        :ok = Basic.qos(chan, prefetch_count: opts[:prefetch])
+        Basic.consume(chan, queue, no_ack: false)
+      else
+        Basic.consume(chan, queue, no_ack: true)
+      end
 
     {:ok,
      %State{
        conn: conn,
        chan: chan,
+       manual_ack: (opts[:prefetch] && true) || false,
        binding_key: opts[:queue],
        consumer_tag: tag,
        consumer_ref: self(),
@@ -59,9 +68,16 @@ defmodule RabbitHole.Task.Consumer do
      }}
   end
 
-  def handle_info({:basic_deliver, message, _meta}, state) do
+  def handle_info({:basic_deliver, message, _meta}, %State{manual_ack: false} = state) do
     state.processor.(Task.from_message(message), state.consumer_ref)
-    Logger.info("Processed message: #{inspect(message)}")
+    Logger.debug("Processed message: #{inspect(Task.from_message(message))}")
+    {:noreply, state}
+  end
+
+  def handle_info({:basic_deliver, message, meta}, %State{manual_ack: true} = state) do
+    state.processor.(Task.from_message(message), state.consumer_ref)
+    Basic.ack(state.chan, meta.delivery_tag)
+    Logger.debug("Processed message: #{inspect(Task.from_message(message))}")
     {:noreply, state}
   end
 
