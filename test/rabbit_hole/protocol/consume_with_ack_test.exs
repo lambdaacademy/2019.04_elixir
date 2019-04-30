@@ -28,8 +28,9 @@ defmodule RabbitHole.Protocol.ConsumeWithAckTest do
       :ok = Basic.publish(params.chan, "", params.queue, @my_message)
 
       # WHEN
-      consume_once(params.queue, true)
-      {:ok, _tag} = Basic.consume(params.chan, params.queue, no_ack: false)
+      consume_once(params.queue, no_ack: true)
+      {:ok, tag} = Basic.consume(params.chan, params.queue, no_ack: false)
+      {:ok, ^tag} = Basic.cancel(params.chan, tag)
 
       # THEN
       refute_received {:basic_deliver, @my_message, _meta}, 100
@@ -42,20 +43,23 @@ defmodule RabbitHole.Protocol.ConsumeWithAckTest do
       :ok = Basic.publish(params.chan, "", params.queue, @my_message)
 
       # WHEN
-      consume_once(params.queue, false)
+      consume_once(params.queue, no_ack: false)
+      {:ok, tag} = Basic.consume(params.chan, params.queue, no_ack: false)
 
       # THEN
-      {:ok, _tag} = Basic.consume(params.chan, params.queue, no_ack: false)
       assert_receive {:basic_deliver, @my_message, meta}, 100
       assert meta.redelivered == true
       assert :ok = Basic.ack(params.chan, meta.delivery_tag)
+
+      # CLEAN-UP
+      {:ok, ^tag} = Basic.cancel(params.chan, tag)
     end
 
     test "prefetch will limit the number of messages until ack is send", params do
       # GIVEN
       # manual acks (i.e. no_ack: false) is set by default
       Basic.qos(params.chan, prefetch_count: 2)
-      {:ok, _tag} = Basic.consume(params.chan, params.queue)
+      {:ok, tag} = Basic.consume(params.chan, params.queue)
 
       # WHEN
       for _ <- 1..3 do
@@ -63,16 +67,18 @@ defmodule RabbitHole.Protocol.ConsumeWithAckTest do
       end
 
       # THEN
-      # get 2 message and receive
+      # get 2 messages and ack
       assert_receive {:basic_deliver, @my_message, _meta}, 100
       assert_receive {:basic_deliver, @my_message, meta1}, 100
       refute_receive {:basic_deliver, @my_message, _meta}, 100
-      # , [:multiple])
-      Basic.ack(params.chan, meta1.delivery_tag)
+      Basic.ack(params.chan, meta1.delivery_tag, [:multiple])
 
       # get the last message and confirm
       assert_receive {:basic_deliver, @my_message, meta2}, 100
       Basic.ack(params.chan, meta2.delivery_tag)
+
+      # CLEAN-UP
+      {:ok, ^tag} = Basic.cancel(params.chan, tag)
     end
 
     test "messages over the prefetch limit are sent to another consumer", params do
@@ -98,21 +104,24 @@ defmodule RabbitHole.Protocol.ConsumeWithAckTest do
       refute_receive {:basic_deliver, @my_message, _meta}, 100
       assert 2 == Enum.count(metas, &(&1.consumer_tag == tag1))
       assert 2 == Enum.count(metas, &(&1.consumer_tag == tag2))
-      Basic.ack(params.chan, List.last(metas).delivery_tag)
+      Basic.ack(params.chan, List.last(metas).delivery_tag, [:multiple])
 
       # get the last message and confirm
       assert_receive {:basic_deliver, @my_message, meta}, 100
       Basic.ack(params.chan, meta.delivery_tag)
+
+      # CLEAN-UP
+      for t <- [tag1, tag2], do: {:ok, ^t} = Basic.cancel(params.chan, t)
     end
   end
 
-  defp consume_once(queue, no_ack) do
+  defp consume_once(queue, opts) do
     Process.flag(:trap_exit, true)
 
     pid =
       spawn_link(fn ->
         {_, chan} = conn_chan = setup_conn_chan()
-        {:ok, tag} = Basic.consume(chan, queue, no_ack: no_ack)
+        {:ok, tag} = Basic.consume(chan, queue, no_ack: opts[:no_ack])
 
         receive do
           {:basic_deliver, @my_message, _meta} ->

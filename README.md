@@ -14,6 +14,10 @@ in Elixir.
     - [Step 2: Message routing](#step-2-message-routing)
       - [Managing exchanges](#managing-exchanges)
       - [Publishing to and consuming from different topics](#publishing-to-and-consuming-from-different-topics)
+    - [Step 3: Data integrity](#step-3-data-integrity)
+      - [Handling Publisher Confirms](#handling-publisher-confirms)
+      - [Handling Consumer Acknowledgments](#handling-consumer-acknowledgments)
+      - [Publishng and consuming tasks with Confirms and Acks](#publishng-and-consuming-tasks-with-confirms-and-acks)
 
 ## Repo structure
 
@@ -79,3 +83,23 @@ and see the message enqueued in the `my_queue` through the the management UI: `h
 2. Open [`test/rabbit_hole/task/producer_consumer_test.exs`](test/rabbit_hole/task/producer_consumer_test.exs) and see the expected behaviour of the [`RabbitHole.Task.Producer`](lib/rabbit_hole/task/producer.ex) and the [`RabbitHole.Task.Consumer`](lib/rabbit_hole/task/consumer.ex).
 3. Implement the producer and consumer modules.
 4. Check the solution by looking at the diff between the tag and the  head of the [2-message-routing](https://github.com/lambdaacademy/2019.04_elixir/tree/step/2-message-routing): [step-2-start...step/2-message-routing](https://github.com/lambdaacademy/2019.04_elixir/compare/step-1-start...step/2-message-routing).
+
+### Step 3: Data integrity
+
+#### Handling Publisher Confirms
+
+1. Open [`test/rabbit_hole/protocol/publish_with_confirm_test.exs`](test/rabbit_hole/protocol/publish_with_confirm_test.exs) to see how to use the Publisher confirms.
+2. Run the tests: `mix test --trace test/rabbit_hole/protocol/publish_with_confirm_test.exs`
+
+#### Handling Consumer Acknowledgments
+
+1. Open [`test/rabbit_hole/protocol/consume_with_ack_test.exs`](test/rabbit_hole/protocol/consume_with_ack_test.exs) to see how to use the Publisher confirms.
+2. Run the tests: `mix test --trace test/rabbit_hole/protocol/consume_with_ack_test.exs`
+
+#### Publishng and consuming tasks with Confirms and Acks
+
+1. Checkout at [step-3-start](https://github.com/lambdaacademy/2019.04_elixir/tree/step-3-start) tag: `git checkout step-3-start`.
+2. Open [`test/rabbit_hole/task/producer_consumer_with_data_integrity_test.exs`](test/rabbit_hole/task/producer_consumer_with_data_integrity_test.exs) and see the expected behaviour of the [`RabbitHole.Task.Producer`](lib/rabbit_hole/task/producer.ex) and the [`RabbitHole.Task.Consumer`](lib/rabbit_hole/task/consumer.ex) with added Publisher Confirms and Consumer Acks respectively.
+3. Extend the producer and consumer modules.
+4. Check the solution by looking at the diff between the tag and the  head of the [3-data-integrity](https://github.com/lambdaacademy/2019.04_elixir/tree/step/3-data-integrity): [step-3-start...step/3-data-integrity](https://github.com/lambdaacademy/2019.04_elixir/compare/step-3-start...step/3-data-integrity).
+

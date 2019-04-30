@@ -31,7 +31,8 @@ defmodule RabbitHole.Protocol.PublishWithConfirmTest do
     :ok = Basic.publish(params.chan, "", params.queue, @my_message)
 
     # THEN
-    true = Confirm.wait_for_confirms(params.chan)
+    assert true = Confirm.wait_for_confirms(params.chan)
+    assert Basic.cancel(params.chan, tag)
   end
 
   test "waits for multiple confirms", params do
@@ -43,6 +44,37 @@ defmodule RabbitHole.Protocol.PublishWithConfirmTest do
     for _ <- 1..10, do: :ok = Basic.publish(params.chan, "", params.queue, @my_message)
 
     # THEN
-    true = Confirm.wait_for_confirms(params.chan)
+    assert true = Confirm.wait_for_confirms(params.chan)
+    assert Basic.cancel(params.chan, tag)
+  end
+
+  test "waits for multiple confirms via callback", params do
+    {:ok, tag} = Basic.consume(params.chan, params.queue, no_ack: false)
+    :ok = Confirm.select(params.chan)
+    :ok = Confirm.register_handler(params.chan, self())
+
+    receive_confirms = fn last_seq_no, callback ->
+      receive do
+        {:basic_ack, ^last_seq_no, _} ->
+          :ok
+
+        {:basic_nack, _, _} ->
+          flunk("Received negative confirm")
+
+        {:basic_ack, seqno, multiple?} ->
+          Logger.debug("Received confirmations (multiple=#{multiple?}) up to #{seqno}")
+          callback.(last_seq_no, callback)
+      end
+    end
+
+    # WHEN
+    for _ <- 1..9, do: :ok = Basic.publish(params.chan, "", params.queue, @my_message)
+    last_seq_no = Confirm.next_publish_seqno(params.chan)
+    :ok = Basic.publish(params.chan, "", params.queue, @my_message)
+
+
+    # THEN
+    assert :ok = receive_confirms.(last_seq_no, receive_confirms)
+    assert Basic.cancel(params.chan, tag)
   end
 end
